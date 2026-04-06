@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jutilan Kiekkokoulu</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ice: #e8f4fd;
+    --deep: #0a0f1e;
+    --rink: #0d1b3e;
+    --blue: #1a56db;
+    --cyan: #06b6d4;
+    --gold: #f59e0b;
+    --red: #ef4444;
+    --green: #22c55e;
+    --glass: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--deep);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Rink texture background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(26,86,219,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(6,182,212,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* Ice lines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(90deg, transparent 49.8%, rgba(6,182,212,0.04) 50%, transparent 50.2%),
+      linear-gradient(transparent 24.8%, rgba(6,182,212,0.03) 25%, transparent 25.2%),
+      linear-gradient(transparent 74.8%, rgba(6,182,212,0.03) 75%, transparent 75.2%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .logo { display: flex; align-items: center; gap: 16px; }
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 24px rgba(6,182,212,0.3);
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%,100% { box-shadow: 0 0 24px rgba(6,182,212,0.3); }
+    50% { box-shadow: 0 0 36px rgba(6,182,212,0.5), 0 0 60px rgba(26,86,219,0.2); }
+  }
+  .logo-text h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 2px;
+    background: linear-gradient(90deg, #fff, var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+  .logo-text p { font-size: 11px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+    color: var(--red); padding: 6px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .live-dot { width: 7px; height: 7px; background: var(--red); border-radius: 50%; animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+  .refresh-btn {
+    background: var(--glass); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 16px; border-radius: 8px;
+    cursor: pointer; font-size: 13px; font-family: inherit;
+    transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--cyan); }
+  .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* NAV TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--glass); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
+  .tab {
+    padding: 10px 20px; border-radius: 9px; cursor: pointer;
+    font-size: 13px; font-weight: 500; letter-spacing: 0.5px;
+    transition: all 0.2s; color: var(--muted); border: none; background: none;
+    font-family: inherit;
+  }
+  .tab.active { background: linear-gradient(135deg, var(--blue), var(--cyan)); color: #fff; box-shadow: 0 4px 12px rgba(26,86,219,0.3); }
+  .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.04); }
+
+  /* PAGE SECTIONS */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* GRID LAYOUTS */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-main { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
+  @media (max-width: 1100px) { .grid-main { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) { .grid-3 { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+
+  /* CARD */
+  .card {
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(255,255,255,0.15); }
+  .card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+  }
+
+  /* STAT CARDS */
+  .stat-card { text-align: center; padding: 24px 16px; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 48px; line-height: 1; margin-bottom: 4px; }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.cyan { color: var(--cyan); }
+  .stat-value.green { color: var(--green); }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* LIVE GAMES */
+  .game-ticker {
+    display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    margin-bottom: 20px;
+  }
+  .game-card {
+    flex-shrink: 0; width: 200px;
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+    position: relative; overflow: hidden;
+    transition: all 0.2s;
+  }
+  .game-card.live { border-color: rgba(239,68,68,0.3); }
+  .game-card.live::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--red), transparent);
+    animation: sweep 2s linear infinite;
+  }
+  @keyframes sweep { 0% { background-position: -200px; } 100% { background-position: 200px; } }
+  .game-card.scheduled { border-color: rgba(100,116,139,0.3); }
+  .game-status {
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 10px; font-weight: 600;
+  }
+  .game-status.live { color: var(--red); }
+  .game-status.final { color: var(--muted); }
+  .game-status.upcoming { color: var(--gold); }
+  .game-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .team-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
+  .team-score { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; }
+  .team-score.winning { color: #fff; }
+  .team-score.losing { color: var(--muted); }
+  .game-clock { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 6px; }
+  .game-time { font-size: 11px; color: var(--gold); margin-top: 6px; }
+
+  /* LEADERBOARD */
+  .leaderboard { }
+  .leaderboard-row {
+    display: grid; grid-template-columns: 36px 1fr auto auto;
+    align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 10px;
+    margin-bottom: 8px;
+    background: var(--glass); border: 1px solid var(--border);
+    transition: all 0.2s; cursor: default;
+  }
+  .leaderboard-row:hover { border-color: rgba(255,255,255,0.15); transform: translateX(2px); }
+  .leaderboard-row.top1 { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); }
+  .leaderboard-row.top2 { background: rgba(148,163,184,0.06); border-color: rgba(148,163,184,0.2); }
+  .leaderboard-row.top3 { background: rgba(205,127,50,0.06); border-color: rgba(205,127,50,0.2); }
+  .rank { font-family: 'Bebas Neue', sans-serif; font-size: 20px; text-align: center; }
+  .rank.gold { color: var(--gold); }
+  .rank.silver { color: #94a3b8; }
+  .rank.bronze { color: #cd7f32; }
+  .user-info { }
+  .user-name { font-weight: 600; font-size: 15px; }
+  .user-division { font-size: 11px; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .user-pts { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--cyan); }
+  .pts-label { font-size: 10px; color: var(--muted); }
+  .user-change { font-size: 12px; font-weight: 600; }
+  .user-change.up { color: var(--green); }
+  .user-change.down { color: var(--red); }
+
+  /* DIVISION SELECTOR */
+  .division-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .div-tab {
+    padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--glass); color: var(--muted); font-size: 13px;
+    cursor: pointer; font-family: inherit; font-weight: 500;
+    transition: all 0.2s;
+  }
+  .div-tab.active { border-color: var(--cyan); color: var(--cyan); background: rgba(6,182,212,0.08); }
+  .div-tab:hover:not(.active) { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* PLAYER TABLE */
+  .player-table { width: 100%; border-collapse: collapse; }
+  .player-table th {
+    text-align: left; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .player-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; }
+  .player-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .player-table tr:last-child td { border-bottom: none; }
+  .player-pos {
+    display: inline-block; padding: 2px 7px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  }
+  .pos-C { background: rgba(26,86,219,0.2); color: #60a5fa; }
+  .pos-LW { background: rgba(6,182,212,0.2); color: var(--cyan); }
+  .pos-RW { background: rgba(6,182,212,0.2); color: var(--cyan); }
+  .pos-D { background: rgba(245,158,11,0.2); color: var(--gold); }
+  .pos-G { background: rgba(239,68,68,0.2); color: #f87171; }
+  .pts-cell { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--cyan); }
+  .trend-up { color: var(--green); font-size: 12px; }
+  .trend-down { color: var(--red); font-size: 12px; }
+  .playing-now { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--red); }
+  .playing-dot { width: 5px; height: 5px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+
+  /* MONTH SELECTOR */
+  .month-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 20px; margin-bottom: 20px;
+  }
+  .month-nav { display: flex; align-items: center; gap: 16px; }
+  .month-btn {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--glass); color: var(--text); cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .month-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .current-month { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .month-stats { display: flex; gap: 24px; }
+  .mstat { text-align: right; }
+  .mstat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); }
+  .mstat-lbl { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ESPN NOTE */
+  .espn-note {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
+    font-size: 13px; color: #fcd34d; line-height: 1.6;
+  }
+  .espn-note-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ADMIN PANEL */
+  .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: inherit;
+    font-size: 14px; transition: border-color 0.2s; outline: none;
+  }
+  .form-input:focus { border-color: var(--cyan); background: rgba(6,182,212,0.05); }
+  .form-select {
+    width: 100%; background: rgba(10,15,30,0.9); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: inherit;
+    font-size: 14px; outline: none; cursor: pointer;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border: none; color: #fff; padding: 12px 24px; border-radius: 10px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(26,86,219,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,86,219,0.4); }
+  .btn-danger {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    color: var(--red); padding: 8px 16px; border-radius: 8px;
+    font-family: inherit; font-size: 13px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+  /* SECTION HEADERS */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--text); }
+  .section-sub { font-size: 12px; color: var(--muted); }
+
+  /* POINTS FORMULA */
+  .formula-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .formula-item {
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .formula-key { font-size: 12px; color: var(--muted); }
+  .formula-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--gold); }
+
+  /* KUKKULAN KUNINGAS TABLE */
+  .kk-section { margin-bottom: 28px; }
+  .kk-division-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px; letter-spacing: 3px;
+    padding: 8px 14px; margin-bottom: 2px;
+    border-radius: 6px 6px 0 0;
+  }
+  .kk-div-ykkonen { background: rgba(26,86,219,0.25); color: #60a5fa; }
+  .kk-div-kakkonen { background: rgba(6,182,212,0.2); color: var(--cyan); }
+  .kk-div-kolmonen { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .kk-table { width: 100%; border-collapse: collapse; }
+  .kk-table thead th {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); padding: 8px 12px; text-align: right;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .kk-table thead th:first-child,
+  .kk-table thead th:nth-child(2),
+  .kk-table thead th:nth-child(3) { text-align: left; }
+  .kk-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  .kk-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .kk-table tbody tr.promote { background: rgba(34,197,94,0.04); }
+  .kk-table tbody tr.relegate { background: rgba(239,68,68,0.04); }
+  .kk-table td {
+    padding: 11px 12px; font-size: 13px; text-align: right; white-space: nowrap;
+  }
+  .kk-table td:first-child { text-align: center; width: 32px; }
+  .kk-table td:nth-child(2) { text-align: left; font-weight: 600; font-size: 14px; }
+  .kk-table td:nth-child(3) { text-align: right; color: var(--muted); font-size: 12px; }
+  .kk-rank { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--muted); }
+  .kk-rank.r1 { color: var(--gold); }
+  .kk-rank.r2 { color: #94a3b8; }
+  .kk-rank.r3 { color: #cd7f32; }
+  .kk-pts { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; color: var(--text); }
+  .kk-prev { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 12px; }
+  .kk-kknum { font-family: 'JetBrains Mono', monospace; color: #a78bfa; font-weight: 700; }
+  .kk-plus { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .kk-plus.zero { color: var(--green); }
+  .kk-plus.neg { color: var(--muted); }
+  .kk-prize { font-size: 12px; font-weight: 700; color: var(--gold); }
+  .kk-jatko { font-size: 12px; white-space: nowrap; }
+  .kk-jatko.up { color: var(--green); }
+  .kk-jatko.down { color: var(--red); }
+  .kk-jatko.stay { color: var(--muted); }
+  .kk-divider { height: 2px; background: var(--border); margin: 0; }
+  .kk-promote-line { height: 2px; background: linear-gradient(90deg, var(--green), transparent); }
+  .kk-relegate-line { height: 2px; background: linear-gradient(90deg, var(--red), transparent); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* SPINNER overlay */
+  #loading-overlay {
+    position: fixed; inset: 0; background: rgba(10,15,30,0.8);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  #loading-overlay.show { opacity: 1; pointer-events: all; }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--cyan); border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 50;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #0d1b3e; border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px; width: 480px; max-width: 95vw;
+    animation: fadeIn 0.25s ease;
+  }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+  .btn-cancel {
+    flex: 1; background: var(--glass); border: 1px solid var(--border);
+    color: var(--muted); padding: 12px; border-radius: 10px;
+    font-family: inherit; font-size: 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-cancel:hover { color: var(--text); }
+
+  /* LAST UPDATED */
+  .last-updated { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+  .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; margin-bottom: 8px; }
+  .empty-state small { font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="loading-overlay"><div class="spinner"></div></div>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🏒</div>
+      <div class="logo-text">
+        <h1>Jutilan Kiekkokoulu</h1>
+        <p>ESPN Fantasy · NHL · Divisioona</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="last-updated" id="last-updated">Päivitetty: —</span>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <button class="refresh-btn" id="refresh-btn" onclick="refreshAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Päivitä
+      </button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button class="tab" onclick="showPage('live')">🔴 Live Pelit</button>
+    <button class="tab" onclick="showPage('divisions')">🏆 Divisioona</button>
+    <button class="tab" onclick="showPage('players')">👤 Pelaajat</button>
+    <button class="tab" onclick="showPage('admin')">⚙️ Hallinta</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="grid-3" style="margin-bottom:20px">
+      <div class="card stat-card">
+        <div class="stat-value gold" id="stat-active-games">—</div>
+        <div class="stat-label">Live Pelit Nyt</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-value cyan" id="stat-top-pts">—</div>
+        <div class="stat-label">Johtajan Pisteet (Kk)</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-value green" id="stat-users">0</div>
+        <div class="stat-label">Pelaajia Liigassa</div>
+      </div>
+    </div>
+
+    <div class="grid-main">
+      <div>
+        <div class="section-header">
+          <span class="section-title">Live NHL Pelit</span>
+          <span class="section-sub" id="games-count">Ladataan...</span>
+        </div>
+        <div class="game-ticker" id="game-ticker">
+          <div class="card" style="min-width:160px;text-align:center;padding:32px 20px;color:var(--muted)">Ladataan...</div>
+        </div>
+
+        <div class="section-header" style="margin-top:8px">
+          <span class="section-title">Kuukauden Toplistaus</span>
+          <span class="section-sub" id="current-month-label">April 2026</span>
+        </div>
+        <div id="dashboard-leaderboard">
+          <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <p>Ei pelaajia vielä</p>
+            <small>Lisää pelaajia Hallinta-välilehdeltä</small>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">Pistejärjestelmä</div>
+          <div class="formula-grid">
+            <div class="formula-item"><span class="formula-key">Maali</span><span class="formula-val">+3</span></div>
+            <div class="formula-item"><span class="formula-key">Syöttö</span><span class="formula-val">+2</span></div>
+            <div class="formula-item"><span class="formula-key">+/-</span><span class="formula-val">+1</span></div>
+            <div class="formula-item"><span class="formula-key">PM</span><span class="formula-val">-1</span></div>
+            <div class="formula-item"><span class="formula-key">SO Maali</span><span class="formula-val">+2</span></div>
+            <div class="formula-item"><span class="formula-key">Torjunta/5</span><span class="formula-val">+1</span></div>
+            <div class="formula-item"><span class="formula-key">Shutout</span><span class="formula-val">+5</span></div>
+            <div class="formula-item"><span class="formula-key">Voitto (M)</span><span class="formula-val">+3</span></div>
+            <div class="formula-item"><span class="formula-key">Häviö (M)</span><span class="formula-val">-1</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">* Mukautettavissa Hallinta-välilehdeltä</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Tulevat Pelit</div>
+          <div id="upcoming-games-sidebar">
+            <div style="color:var(--muted);font-size:13px">Ladataan...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE GAMES -->
+  <div class="page" id="page-live">
+    <div class="section-header">
+      <span class="section-title">🔴 Kaikki NHL Pelit Tänään</span>
+      <span class="section-sub" id="live-page-date">—</span>
+    </div>
+    <div id="live-games-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
+      <div style="color:var(--muted);padding:24px">Ladataan...</div>
+    </div>
+  </div>
+
+  <!-- DIVISIONS -->
+  <div class="page" id="page-divisions">
+    <div class="month-bar">
+      <div class="month-nav">
+        <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+        <span class="current-month" id="div-month">HUHTIKUU 2026</span>
+        <button class="month-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="month-stats">
+        <div class="mstat">
+          <div class="mstat-val" id="month-leader-pts">—</div>
+          <div class="mstat-lbl">Johtajan pisteet</div>
+        </div>
+        <div class="mstat">
+          <div class="mstat-val" id="month-avg">—</div>
+          <div class="mstat-lbl">Keskipisteet</div>
+        </div>
+        <div class="mstat">
+          <div class="mstat-val" id="month-teams">0</div>
+          <div class="mstat-lbl">Joukkuetta</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kukkulan kuningas table -->
+    <div id="divisions-container">
+      <div class="empty-state">
+        <div class="empty-state-icon">🏆</div>
+        <p>Ei joukkueita vielä</p>
+        <small>Hae pisteet ESPN:stä tai lisää joukkueet Hallinta-välilehdeltä</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYERS -->
+  <div class="page" id="page-players">
+    <div class="section-header">
+      <span class="section-title">Kaikki Seuratut Pelaajat</span>
+      <button class="btn-primary" style="font-size:13px;padding:9px 18px" onclick="openAddPlayerModal()">+ Lisää Pelaaja</button>
+    </div>
+    <div class="card">
+      <table class="player-table">
+        <thead>
+          <tr>
+            <th>Pelaaja</th><th>Pos</th><th>Joukkue</th><th>Status</th>
+            <th>G</th><th>A</th><th>PTS</th><th>Kk PTS</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="player-tbody">
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Ei pelaajia. Lisää pelaajia Hallinta-välilehdeltä.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="page" id="page-admin">
+    <div class="espn-note">
+      <span class="espn-note-icon">🔗</span>
+      <div>
+        <strong>ESPN API -integraatio</strong> — Syötä ESPN Fantasy -liigasi tiedot alta. Käyttäjätiedot ja valinnat synkronoidaan automaattisesti. Kuukausidivisioona lasketaan tämän järjestelmän pisteytyksellä.
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- ESPN Settings -->
+      <div class="card">
+        <div class="card-title">ESPN Liiga-asetukset</div>
+        <div class="form-group">
+          <label class="form-label">ESPN Liiga ID</label>
+          <input class="form-input" id="espn-league-id" placeholder="esim. 12345678" value="">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ESPN Season ID (Vuosi)</label>
+          <input class="form-input" id="espn-season" placeholder="2024" value="2024">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ESPN_S2 Cookie (yksityiset liigat)</label>
+          <input class="form-input" id="espn-s2" placeholder="AEB2..." type="password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SWID Cookie (yksityiset liigat)</label>
+          <input class="form-input" id="espn-swid" placeholder="{xxxxxxxx-...}" type="password">
+        </div>
+        <button class="btn-primary" onclick="saveEspnSettings()" style="width:100%">Tallenna & Testaa Yhteys</button>
+        <div id="espn-status" style="margin-top:12px;font-size:13px;display:none"></div>
+
+        <!-- Sync status -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">ESPN Pisteet</span>
+            <span id="espn-sync-status" style="font-size:12px;color:var(--muted)">Ei synkronoitu</span>
+          </div>
+          <button class="btn-primary" onclick="manualSyncESPN()" style="width:100%;background:linear-gradient(135deg,#065f46,#047857)">
+            🔄 Hae pisteet ESPN:stä nyt
+          </button>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+            Hakee kaikkien managerin pelaajien pisteet automaattisesti. Vaatii että olet kirjautunut ESPN:ään tässä selaimessa.
+          </div>
+        </div>
+      </div>
+
+      <!-- Add User -->
+      <div class="card">
+        <div class="card-title">Lisää Liigan Pelaaja</div>
+        <div class="form-group">
+          <label class="form-label">Pelaajan Nimi</label>
+          <input class="form-input" id="new-user-name" placeholder="Etunimi Sukunimi">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ESPN Manager ID</label>
+          <input class="form-input" id="new-user-espnid" placeholder="ESPN käyttäjätunnus">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Divisioona</label>
+          <select class="form-select" id="new-user-division">
+            <option value="A">A-Divisioona</option>
+            <option value="B">B-Divisioona</option>
+            <option value="C">C-Divisioona</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aloituspisteet (jakson alku)</label>
+          <input class="form-input" id="new-user-pts" placeholder="0" value="0" type="number">
+        </div>
+        <button class="btn-primary" onclick="addUser()" style="width:100%">Lisää Pelaaja</button>
+      </div>
+
+      <!-- Points config -->
+      <div class="card">
+        <div class="card-title">Pisteytysasetukset</div>
+        <div id="scoring-config">
+          <div class="form-group">
+            <label class="form-label">Maali (G)</label>
+            <input class="form-input" id="pts-goal" value="3" type="number" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Syöttö (A)</label>
+            <input class="form-input" id="pts-assist" value="2" type="number" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">+/- Per</label>
+            <input class="form-input" id="pts-plusminus" value="1" type="number" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jäähy-minuutti (penalty)</label>
+            <input class="form-input" id="pts-pim" value="-1" type="number" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Torjunnat / 5 (G)</label>
+            <input class="form-input" id="pts-saves" value="1" type="number" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nollapeli / Shutout (G)</label>
+            <input class="form-input" id="pts-shutout" value="5" type="number" step="0.5">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="saveScoringSettings()" style="width:100%;margin-top:8px">Tallenna Pisteytys</button>
+      </div>
+
+      <!-- User Management -->
+      <div class="card">
+        <div class="card-title">Pelaajien Hallinta</div>
+        <div id="user-management-list">
+          <div class="empty-state" style="padding:24px">
+            <p>Ei pelaajia</p>
+            <small>Lisää pelaajia vasemmalta</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME SETUP MODAL -->
+<div class="modal-overlay" id="welcome-modal" style="z-index:200">
+  <div class="modal" style="width:520px;text-align:center">
+    <div style="font-size:52px;margin-bottom:16px">🏒</div>
+    <div class="modal-title" style="font-size:32px;margin-bottom:6px">Jutilan Kiekkokoulu</div>
+    <div style="color:var(--muted);font-size:14px;margin-bottom:32px">ESPN Fantasy Hockey · Kuukausidivisioona</div>
+
+    <div id="welcome-step-1">
+      <div style="background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:20px;margin-bottom:24px;text-align:left">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:12px">Vaihe 1 / 2 — ESPN Liiga-ID</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Löydät liiga-ID:n ESPN Fantasy Hockey -sivulta URL-osoitteesta:<br><br>
+          <code style="background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:4px;font-size:12px;color:var(--cyan)">fantasy.espn.com/hockey/league?leagueId=<strong style="color:var(--gold)">12345678</strong></code>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">ESPN Liiga-ID</label>
+          <input class="form-input" id="welcome-league-id" placeholder="esim. 410781" type="number" style="font-size:18px;text-align:center;letter-spacing:2px">
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%;padding:14px;font-size:15px" onclick="welcomeStep2()">Jatka →</button>
+      <div style="margin-top:12px">
+        <button onclick="welcomeSkip()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">Ohita — syötä tiedot myöhemmin</button>
+      </div>
+    </div>
+
+    <div id="welcome-step-2" style="display:none">
+      <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:20px;margin-bottom:16px;text-align:left">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Vaihe 2 / 2 — Kirjautuminen</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Kirjaudu ESPN:ään <strong style="color:var(--text)">tässä samassa selaimessa</strong> ennen kuin testaat yhteyden. Evästeet kulkevat automaattisesti.<br><br>
+          Jos liigasi on yksityinen eikä automaatti toimi, syötä evästeet manuaalisesti Hallinta-välilehdellä.
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px 14px">
+          <div id="welcome-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background 0.3s"></div>
+          <div id="welcome-status" style="font-size:13px;color:var(--muted)">Ei testattu vielä</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <button class="btn-primary" onclick="welcomeTestConnection()" style="padding:12px">🔗 Testaa yhteys</button>
+        <a href="https://www.espn.com/fantasy/hockey/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;padding:12px">🌐 Avaa ESPN</a>
+      </div>
+      <button class="btn-primary" style="width:100%;padding:14px;font-size:15px" onclick="welcomeFinish()">Aloita sovellus →</button>
+      <div style="margin-top:10px">
+        <button onclick="welcomeBack()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">← Takaisin</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Player Modal -->
+<div class="modal-overlay" id="add-player-modal">
+  <div class="modal">
+    <div class="modal-title">Lisää NHL Pelaaja Seurantaan</div>
+    <div class="form-group">
+      <label class="form-label">Pelaajan Nimi</label>
+      <input class="form-input" id="modal-player-name" placeholder="esim. Connor McDavid">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Joukkue</label>
+      <select class="form-select" id="modal-player-team">
+        <option>EDM</option><option>TOR</option><option>BOS</option><option>NYR</option>
+        <option>FLA</option><option>CAR</option><option>DAL</option><option>COL</option>
+        <option>VGK</option><option>WPG</option><option>TB</option><option>NJ</option>
+        <option>MIN</option><option>OTT</option><option>SEA</option><option>VAN</option>
+        <option>CGY</option><option>LA</option><option>STL</option><option>ANA</option>
+        <option>SJ</option><option>BUF</option><option>PHI</option><option>DET</option>
+        <option>MTL</option><option>PIT</option><option>WSH</option><option>CHI</option>
+        <option>CBJ</option><option>NYI</option><option>NSH</option><option>UTA</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Positio</label>
+      <select class="form-select" id="modal-player-pos">
+        <option value="C">C – Sentteri</option>
+        <option value="LW">LW – Vasen Laitahyökkääjä</option>
+        <option value="RW">RW – Oikea Laitahyökkääjä</option>
+        <option value="D">D – Puolustaja</option>
+        <option value="G">G – Maalivahti</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Liittää pelaajalle (käyttäjä)</label>
+      <select class="form-select" id="modal-player-user">
+        <option value="">– Ei kenellekään –</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Peruuta</button>
+      <button class="btn-primary" style="flex:2" onclick="addPlayer()">Lisää Pelaaja</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let state = {
+  games: [],
+  users: JSON.parse(localStorage.getItem('jkk_users') || '[]'),
+  players: JSON.parse(localStorage.getItem('jkk_players') || '[]'),
+  scoring: JSON.parse(localStorage.getItem('jkk_scoring') || JSON.stringify({goal:3,assist:2,plusminus:1,pim:-1,saves:1,shutout:5})),
+  espn: JSON.parse(localStorage.getItem('jkk_espn') || JSON.stringify({leagueId:'69315', season:'2024'})),
+  currentDivision: 'all',
+  currentMonthOffset: 0,
+  lastRefresh: null
+};
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_FI = ['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
+
+let monthOffset = 0;
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'players') renderPlayerTable();
+  if (id === 'divisions') renderDivisions();
+  if (id === 'admin') renderAdminUsers();
+}
+
+// ===== DATA FETCHING =====
+async function fetchNHLGames() {
+  // Using ESPN's public NHL scoreboard API
+  const today = new Date();
+  const dateStr = today.toISOString().split('T')[0].replace(/-/g,'');
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=${dateStr}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return parseESPNGames(data);
+  } catch(e) {
+    console.error('ESPN fetch failed, using fallback', e);
+    return getFallbackGames();
+  }
+}
+
+function parseESPNGames(data) {
+  const games = [];
+  if (!data.events) return getFallbackGames();
+  for (const evt of data.events) {
+    const comp = evt.competitions[0];
+    const home = comp.competitors.find(c => c.homeAway === 'home');
+    const away = comp.competitors.find(c => c.homeAway === 'away');
+    const status = comp.status.type.name; // STATUS_IN_PROGRESS, STATUS_FINAL, STATUS_SCHEDULED
+    const clock = comp.status.displayClock || '';
+    const period = comp.status.period || 0;
+    games.push({
+      id: evt.id,
+      homeAbbr: home.team.abbreviation,
+      awayAbbr: away.team.abbreviation,
+      homeName: home.team.displayName,
+      awayName: away.team.displayName,
+      homeScore: parseInt(home.score || 0),
+      awayScore: parseInt(away.score || 0),
+      status: status,
+      clock: clock,
+      period: period,
+      startTime: evt.date
+    });
+  }
+  return games;
+}
+
+function getFallbackGames() {
+  // Hard-coded from our sports data tool for demo
+  return [
+    { id:'g1', homeAbbr:'NYR', awayAbbr:'DET', homeName:'New York Rangers', awayName:'Detroit Red Wings', homeScore:2, awayScore:0, status:'STATUS_IN_PROGRESS', clock:'00:05', period:3, startTime:'2026-04-04T16:30:00Z' },
+    { id:'g2', homeAbbr:'OTT', awayAbbr:'MIN', homeName:'Ottawa Senators', awayName:'Minnesota Wild', homeScore:0, awayScore:2, status:'STATUS_IN_PROGRESS', clock:'16:33', period:2, startTime:'2026-04-04T17:00:00Z' },
+    { id:'g3', homeAbbr:'DAL', awayAbbr:'COL', homeName:'Dallas Stars', awayName:'Colorado Avalanche', homeScore:null, awayScore:null, status:'STATUS_SCHEDULED', clock:'', period:0, startTime:'2026-04-04T19:00:00Z' },
+    { id:'g4', homeAbbr:'PIT', awayAbbr:'FLA', homeName:'Pittsburgh Penguins', awayName:'Florida Panthers', homeScore:null, awayScore:null, status:'STATUS_SCHEDULED', clock:'', period:0, startTime:'2026-04-04T21:00:00Z' },
+    { id:'g5', homeAbbr:'TB', awayAbbr:'BOS', homeName:'Tampa Bay Lightning', awayName:'Boston Bruins', homeScore:null, awayScore:null, status:'STATUS_SCHEDULED', clock:'', period:0, startTime:'2026-04-04T21:00:00Z' },
+    { id:'g6', homeAbbr:'NYI', awayAbbr:'PHI', homeName:'New York Islanders', awayName:'Philadelphia Flyers', homeScore:1, awayScore:4, status:'STATUS_FINAL', clock:'', period:3, startTime:'2026-04-03T23:00:00Z' },
+    { id:'g7', homeAbbr:'ANA', awayAbbr:'STL', homeName:'Anaheim Ducks', awayName:'St. Louis Blues', homeScore:2, awayScore:6, status:'STATUS_FINAL', clock:'', period:3, startTime:'2026-04-04T02:00:00Z' },
+  ];
+}
+
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  document.getElementById('loading-overlay').classList.add('show');
+  try {
+    // Fetch pisteet.json (Python-skriptin tuottama tiedosto)
+    await fetchPisteetJson();
+
+    // Fetch NHL live scores (public API)
+    state.games = await fetchNHLGames();
+
+    
+
+    state.lastRefresh = new Date();
+    renderDashboard();
+    renderLivePage();
+    document.getElementById('last-updated').textContent = 'Päivitetty: ' + state.lastRefresh.toLocaleTimeString('fi-FI');
+  } catch(e) { console.error(e); }
+  btn.classList.remove('spinning');
+  document.getElementById('loading-overlay').classList.remove('show');
+}
+
+async function fetchPisteetJson() {
+  try {
+    const res = await fetch('pisteet.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.joukkueet) return;
+
+    const now = new Date();
+    const month_key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    data.joukkueet.forEach(j => {
+      let user = state.users.find(u => u.espnTeamId === j.espnTeamId || u.espnTeamName === j.espnTeamName);
+      if (!user) {
+        user = {
+          id: Date.now().toString() + Math.random(),
+          name: j.managerName || j.espnTeamName,
+          espnTeamId: j.espnTeamId,
+          espnTeamName: j.espnTeamName,
+          espnId: j.espnTeamId,
+          division: 'Kolmonen',
+          demoPoints: 0,
+          change: 0,
+          monthlyPoints: {}
+        };
+        state.users.push(user);
+      }
+      user.espnTeamName = j.espnTeamName;
+      user.seasonPts = j.seasonPts;
+      if (!user.monthlyPoints) user.monthlyPoints = {};
+      Object.assign(user.monthlyPoints, j.monthPts || {});
+
+      // Update players
+      if (j.pelaajat) {
+        j.pelaajat.forEach(p => {
+          const existing = state.players.findIndex(ep => ep.nimi === p.nimi && ep.userId === user.id);
+          const playerObj = {
+            id: user.id + '_' + p.nimi.replace(/\s/g,''),
+            name: p.nimi,
+            pos: p.positio || 'F',
+            team: p.joukkue || '?',
+            userId: user.id,
+            goals: 0,
+            assists: 0,
+            monthPts: p.pisteet || 0
+          };
+          if (existing >= 0) state.players[existing] = playerObj;
+          else state.players.push(playerObj);
+        });
+      }
+    });
+
+    saveState();
+    console.log(`Ladattu pisteet.json: ${data.joukkueet.length} joukkuetta, päivitetty ${data.paivitetty}`);
+    document.getElementById('last-updated').textContent = `Päivitetty: ${new Date(data.paivitetty).toLocaleTimeString('fi-FI')}`;
+  } catch(e) {
+    console.log('pisteet.json ei löydy tai virhe:', e);
+  }
+}
+
+async function espnFetch(path, params = '') {
+  const leagueId = state.espn.leagueId || '69315';
+  const season = state.espn.season || '2024';
+  const bases = [
+    'https://lm-api-reads.fantasy.espn.com',
+    'https://fantasy.espn.com'
+  ];
+
+  for (const base of bases) {
+    // ESPN uses 'fhl' for fantasy hockey
+    const url = `${base}/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}${path}${params}`;
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(state.espn.s2 ? { 'Cookie': `espn_s2=${state.espn.s2}; SWID=${state.espn.swid}` } : {})
+        },
+        mode: 'cors'
+      });
+      if (res.status === 401 || res.status === 403) {
+        console.warn('ESPN: kirjautuminen vaaditaan');
+        return null;
+      }
+      if (!res.ok) continue;
+      return await res.json();
+    } catch(e) {
+      // CORS — try proxy
+      try {
+        const target = encodeURIComponent(url);
+        const proxy = await fetch(`https://api.allorigins.win/get?url=${target}`);
+        const wrapper = await proxy.json();
+        return JSON.parse(wrapper.contents);
+      } catch(e2) {
+        continue;
+      }
+    }
+  }
+  return null;
+}
+
+async function fetchESPNFantasyData() {
+  // Fetch roster + team + matchup + scoring period data in one call
+  const now = new Date();
+  const scoringPeriod = getScoringPeriod(now);
+
+  const data = await espnFetch('', `?view=mTeam&view=mRoster&view=mMatchup&view=mSettings&scoringPeriodId=${scoringPeriod}`);
+  if (!data) return;
+
+  updateSyncStatus('espn-sync-status', '✅ ESPN-data ladattu', 'var(--green)');
+
+  // Extract teams / managers
+  const teams = data.teams || [];
+  const members = data.members || [];
+  const settings = data.settings || {};
+
+  // Map ESPN teams to our users
+  teams.forEach(team => {
+    const ownerId = team.primaryOwner;
+    const member = members.find(m => m.id === ownerId);
+    const managerName = member
+      ? (member.displayName || `${member.firstName} ${member.lastName}`.trim())
+      : team.name || `Joukkue ${team.id}`;
+
+    // Find or create user
+    let user = state.users.find(u => u.espnId === ownerId || u.espnTeamId === String(team.id));
+    if (!user) {
+      user = {
+        id: Date.now().toString() + Math.random(),
+        name: managerName,
+        espnId: ownerId,
+        espnTeamId: String(team.id),
+        division: 'A',
+        demoPoints: 0,
+        change: 0,
+        monthlyPoints: {}
+      };
+      state.users.push(user);
+    } else {
+      user.espnId = ownerId;
+      user.espnTeamId = String(team.id);
+      if (!user.monthlyPoints) user.monthlyPoints = {};
+    }
+
+    // Extract roster and calculate fantasy points
+    const roster = team.roster?.entries || [];
+    const players = [];
+    let totalFantasyPts = 0;
+    let monthPts = 0;
+
+    roster.forEach(entry => {
+      const playerInfo = entry.playerPoolEntry?.player;
+      if (!playerInfo) return;
+
+      const stats = entry.playerPoolEntry?.player?.stats || [];
+      const seasonStats = stats.find(s => s.statSourceId === 0 && s.statSplitTypeId === 5); // season scoring period
+      const appliedStats = entry.playerPoolEntry?.appliedStatTotal || 0;
+
+      // Get this scoring period's stats
+      const periodStats = stats.find(s => s.statSourceId === 0 && s.scoringPeriodId === scoringPeriod);
+      const periodPts = periodStats ? calcFantasyPoints(periodStats.stats || {}) : 0;
+
+      // Get season cumulative points
+      const seasonPts = seasonStats ? calcFantasyPoints(seasonStats.stats || {}) : 0;
+
+      // Monthly: sum scoring periods in this month
+      const monthKey = getMonthKey(0);
+      const monthStart = getMonthScoringPeriodStart(now);
+      let mPts = 0;
+      stats.filter(s => s.statSourceId === 0 && s.scoringPeriodId >= monthStart && s.scoringPeriodId <= scoringPeriod)
+           .forEach(s => { mPts += calcFantasyPoints(s.stats || {}); });
+
+      monthPts += mPts;
+      totalFantasyPts += seasonPts;
+
+      players.push({
+        id: String(playerInfo.id),
+        name: playerInfo.fullName,
+        pos: mapPosition(playerInfo.defaultPositionId),
+        team: playerInfo.proTeamId ? proTeamAbbr(playerInfo.proTeamId) : '?',
+        userId: user.id,
+        goals: getStatValue(seasonStats?.stats, 'goals'),
+        assists: getStatValue(seasonStats?.stats, 'assists'),
+        plusMinus: getStatValue(seasonStats?.stats, 'plusMinus'),
+        monthPts: Math.round(mPts * 10) / 10,
+        seasonPts: Math.round(seasonPts * 10) / 10,
+        todayPts: Math.round(periodPts * 10) / 10
+      });
+    });
+
+    // Update user monthly points
+    const monthKey = getMonthKey(0);
+    user.monthlyPoints[monthKey] = Math.round(monthPts * 10) / 10;
+    user.seasonPts = Math.round(totalFantasyPts * 10) / 10;
+    user.espnTeamName = team.name || '';
+
+    // Update players
+    players.forEach(p => {
+      const existing = state.players.findIndex(ep => ep.id === p.id);
+      if (existing >= 0) {
+        state.players[existing] = { ...state.players[existing], ...p };
+      } else {
+        state.players.push(p);
+      }
+    });
+  });
+
+  saveState();
+}
+
+function calcFantasyPoints(stats) {
+  if (!stats || typeof stats !== 'object') return 0;
+  const s = state.scoring;
+  let pts = 0;
+  // Skater stats (ESPN stat IDs)
+  pts += (stats[0] || 0) * s.goal;       // goals
+  pts += (stats[1] || 0) * s.assist;     // assists
+  pts += (stats[2] || 0) * s.assist;     // assists (secondary)
+  pts += (stats[5] || 0) * s.plusminus;  // +/-
+  pts += (stats[14] || 0) * s.pim;       // penalty minutes
+  pts += (stats[17] || 0) * s.goal;      // power play goals
+  pts += (stats[18] || 0) * s.assist;    // power play assists
+  pts += (stats[20] || 0) * s.goal;      // shorthanded goals
+  pts += (stats[24] || 0) * 2;           // shootout goals
+  // Goalie stats
+  pts += Math.floor((stats[29] || 0) / 5) * s.saves; // saves / 5
+  pts += (stats[32] || 0) * s.shutout;   // shutouts
+  pts += (stats[31] || 0) * 3;           // wins
+  pts += (stats[33] || 0) * -1;          // losses
+  return pts;
+}
+
+function getStatValue(stats, key) {
+  if (!stats) return 0;
+  const map = { goals: 0, assists: 1, plusMinus: 5, pim: 14, saves: 29, shutouts: 32 };
+  return stats[map[key]] || 0;
+}
+
+function getScoringPeriod(date) {
+  // ESPN scoring period = roughly week number in season
+  // Season typically starts in October, period 1 = first week
+  const seasonStart = new Date('2025-10-07');
+  const diff = Math.floor((date - seasonStart) / (1000 * 60 * 60 * 24 * 7));
+  return Math.max(1, diff + 1);
+}
+
+function getMonthScoringPeriodStart(date) {
+  const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+  return getScoringPeriod(monthStart);
+}
+
+function mapPosition(posId) {
+  const map = { 1:'C', 2:'LW', 3:'RW', 4:'D', 5:'D', 7:'LW', 8:'RW', 9:'G' };
+  return map[posId] || 'F';
+}
+
+function proTeamAbbr(id) {
+  const map = {
+    1:'ATL',2:'BOS',3:'BUF',4:'CGY',5:'CHI',6:'COL',7:'CBJ',8:'DAL',
+    9:'DET',10:'EDM',11:'FLA',12:'LA',13:'MIN',14:'MTL',15:'NSH',
+    16:'NJ',17:'NYI',18:'NYR',19:'OTT',20:'PHI',21:'PIT',22:'STL',
+    23:'SJ',24:'TB',25:'TOR',26:'VAN',27:'WSH',28:'WPG',29:'ANA',
+    30:'UTA',31:'VGK',32:'SEA',33:'CAR'
+  };
+  return map[id] || '?';
+}
+
+function updateSyncStatus(id, msg, color) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+// ===== RENDER GAMES =====
+function getStatusLabel(g) {
+  if (g.status === 'STATUS_IN_PROGRESS') return { cls:'live', txt:`P${g.period} · ${g.clock}` };
+  if (g.status === 'STATUS_FINAL') return { cls:'final', txt:'Päättynyt' };
+  return { cls:'upcoming', txt: formatTime(g.startTime) };
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('fi-FI', { hour:'2-digit', minute:'2-digit', timeZone:'Europe/Helsinki' });
+}
+
+function gameCardHTML(g, compact=false) {
+  const {cls, txt} = getStatusLabel(g);
+  const live = g.status === 'STATUS_IN_PROGRESS';
+  const done = g.status === 'STATUS_FINAL';
+  const scoreOrTime = (live || done);
+  const hWin = scoreOrTime && g.homeScore > g.awayScore;
+  const aWin = scoreOrTime && g.awayScore > g.homeScore;
+  const hScoreCls = hWin ? 'winning' : 'losing';
+  const aScoreCls = aWin ? 'winning' : 'losing';
+  return `
+    <div class="game-card ${live ? 'live' : g.status==='STATUS_SCHEDULED' ? 'scheduled' : ''}">
+      <div class="game-status ${cls}">${live ? '● ' : ''}${txt}</div>
+      <div class="game-row">
+        <span class="team-abbr">${g.awayAbbr}</span>
+        ${scoreOrTime ? `<span class="team-score ${aScoreCls}">${g.awayScore}</span>` : ''}
+      </div>
+      <div class="game-row">
+        <span class="team-abbr">${g.homeAbbr}</span>
+        ${scoreOrTime ? `<span class="team-score ${hScoreCls}">${g.homeScore}</span>` : ''}
+      </div>
+      ${!scoreOrTime ? `<div class="game-time">🕐 ${formatTime(g.startTime)}</div>` : ''}
+    </div>`;
+}
+
+function renderDashboard() {
+  const liveGames = state.games.filter(g => g.status === 'STATUS_IN_PROGRESS');
+  const upcoming = state.games.filter(g => g.status === 'STATUS_SCHEDULED');
+
+  document.getElementById('stat-active-games').textContent = liveGames.length;
+  document.getElementById('stat-users').textContent = state.users.length;
+
+  // Top points this month
+  const monthPts = state.users.map(u => calcMonthPoints(u, 0));
+  const maxPts = monthPts.length ? Math.max(...monthPts) : 0;
+  document.getElementById('stat-top-pts').textContent = maxPts;
+
+  // Game ticker
+  const ticker = document.getElementById('game-ticker');
+  if (state.games.length === 0) {
+    ticker.innerHTML = '<div style="color:var(--muted);padding:24px 12px;font-size:13px">Ei pelejä tänään</div>';
+  } else {
+    ticker.innerHTML = [...liveGames, ...upcoming, ...state.games.filter(g=>g.status==='STATUS_FINAL')]
+      .map(g => gameCardHTML(g)).join('');
+  }
+
+  document.getElementById('games-count').textContent = `${liveGames.length} live · ${upcoming.length} tulossa`;
+
+  // Upcoming sidebar
+  const upcomingSide = document.getElementById('upcoming-games-sidebar');
+  if (upcoming.length === 0) {
+    upcomingSide.innerHTML = '<div style="color:var(--muted);font-size:13px">Ei tulevia pelejä</div>';
+  } else {
+    upcomingSide.innerHTML = upcoming.slice(0,5).map(g => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px;font-weight:500">${g.awayAbbr} @ ${g.homeAbbr}</span>
+        <span style="font-size:12px;color:var(--gold);font-family:'JetBrains Mono',monospace">${formatTime(g.startTime)}</span>
+      </div>`).join('');
+  }
+
+  // Leaderboard
+  renderLeaderboard('dashboard-leaderboard', 0, 'all', 5);
+
+  // Month label
+  const now = new Date();
+  document.getElementById('current-month-label').textContent = MONTHS[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+function renderLivePage() {
+  const grid = document.getElementById('live-games-grid');
+  const now = new Date();
+  document.getElementById('live-page-date').textContent = now.toLocaleDateString('fi-FI', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  if (state.games.length === 0) {
+    grid.innerHTML = '<div style="color:var(--muted);padding:32px">Ei pelejä</div>';
+    return;
+  }
+  grid.innerHTML = [...state.games.filter(g=>g.status==='STATUS_IN_PROGRESS'), ...state.games.filter(g=>g.status==='STATUS_SCHEDULED'), ...state.games.filter(g=>g.status==='STATUS_FINAL')]
+    .map(g => gameCardHTML(g)).join('');
+}
+
+async function manualSyncESPN() {
+  if (!state.espn.leagueId) {
+    alert('Syötä ensin ESPN Liiga-ID Hallinta-välilehdellä.');
+    return;
+  }
+  const statusEl = document.getElementById('espn-sync-status');
+  if (statusEl) { statusEl.textContent = '⏳ Haetaan...'; statusEl.style.color = 'var(--gold)'; }
+  document.getElementById('loading-overlay').classList.add('show');
+
+  try {
+    
+    renderDashboard();
+    renderLivePage();
+    const activePage = document.querySelector('.page.active');
+    if (activePage?.id === 'page-divisions') renderDivisions();
+    if (activePage?.id === 'page-players') renderPlayerTable();
+    if (activePage?.id === 'page-admin') renderAdminUsers();
+    document.getElementById('last-updated').textContent = 'Päivitetty: ' + new Date().toLocaleTimeString('fi-FI');
+  } catch(e) {
+    console.error(e);
+    if (statusEl) { statusEl.textContent = '❌ Haku epäonnistui'; statusEl.style.color = 'var(--red)'; }
+  }
+  document.getElementById('loading-overlay').classList.remove('show');
+}
+
+// ===== POINTS ENGINE =====
+function calcMonthPoints(user, monthOffset) {
+  const key = getMonthKey(monthOffset);
+  // Prefer ESPN-fetched monthly points
+  if (user.monthlyPoints && user.monthlyPoints[key] !== undefined) {
+    return user.monthlyPoints[key];
+  }
+  // Fallback to manually entered demo points
+  return user.demoPoints || 0;
+}
+
+function getMonthKey(offset=0) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function getMonthLabel(offset=0) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + offset);
+  return `${MONTHS[d.getMonth()].toUpperCase()} ${d.getFullYear()}`;
+}
+
+// ===== LEADERBOARD =====
+function renderLeaderboard(containerId, monthOffset, division, limit=999) {
+  const container = document.getElementById(containerId);
+  let users = [...state.users];
+  if (division !== 'all') users = users.filter(u => u.division === division);
+  users = users.map(u => ({...u, pts: calcMonthPoints(u, monthOffset)}))
+               .sort((a,b) => b.pts - a.pts)
+               .slice(0, limit);
+
+  if (users.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><p>Ei pelaajia</p><small>Lisää pelaajia Hallinta-välilehdeltä</small></div>`;
+    return;
+  }
+
+  const rankClass = ['','top1','top2','top3'];
+  const rankColor = ['','gold','silver','bronze'];
+  container.innerHTML = users.map((u,i) => {
+    const rank = i+1;
+    const rc = rankClass[rank] || '';
+    const col = rankColor[rank] || '';
+    const change = u.change || 0;
+    return `<div class="leaderboard-row ${rc}">
+      <div class="rank ${col}">${rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank}</div>
+      <div class="user-info">
+        <div class="user-name">${u.name}</div>
+        <div class="user-division">${u.division}-Divisioona</div>
+      </div>
+      <div style="text-align:right">
+        <div class="user-pts">${u.pts}</div>
+        <div class="pts-label">pistettä</div>
+      </div>
+      <div class="user-change ${change >= 0 ? 'up' : 'down'}">${change >= 0 ? '▲' : '▼'}${Math.abs(change)}</div>
+    </div>`;
+  }).join('');
+}
+
+
+const DIVISION_HISTORY = {
+  '2026-03': {
+    'Don Pollos Hermanos': 'Ykkonen',
+    'Las Pargas Islanders': 'Ykkonen',
+    'Veromies Breezers': 'Ykkonen',
+    'Tehtaansuo Akatemia': 'Ykkonen',
+    'Lopen LoKit': 'Ykkonen',
+    'Loppi LoKi': 'Ykkonen',
+    'D.R.I': 'Ykkonen',
+    'Lungu Lungu': 'Ykkonen',
+    'Hellsinki Little Bulldogs': 'Kakkonen',
+    'Helsinki Little Bulldogs': 'Kakkonen',
+    'Team T': 'Kakkonen',
+    'GM X': 'Kakkonen',
+    'Southern Hooligans': 'Kakkonen',
+    'Brooox': 'Kakkonen',
+    'Pasilan Kalteva': 'Kakkonen',
+    'Kulomäen Ketterä': 'Kolmonen',
+    'Seattle Wolverines': 'Kolmonen',
+    'Espoo Chiefs': 'Kolmonen',
+    'Tusby sHooters': 'Kolmonen',
+    'Jagr 68': 'Kolmonen'
+  },
+  '2026-04': {
+    'Las Pargas Islanders': 'Ykkonen',
+    'Veromies Breezers': 'Ykkonen',
+    'Team T': 'Ykkonen',
+    'Tehtaansuo Akatemia': 'Ykkonen',
+    'Hellsinki Little Bulldogs': 'Ykkonen',
+    'Helsinki Little Bulldogs': 'Ykkonen',
+    'Don Pollos Hermanos': 'Ykkonen',
+    'Kulomäen Ketterä': 'Ykkonen',
+    'Lopen LoKit': 'Kakkonen',
+    'Loppi LoKi': 'Kakkonen',
+    'D.R.I': 'Kakkonen',
+    'GM X': 'Kakkonen',
+    'Seattle Wolverines': 'Kakkonen',
+    'Espoo Chiefs': 'Kakkonen',
+    'Southern Hooligans': 'Kakkonen',
+    'Jagr 68': 'Kolmonen',
+    'Brooox': 'Kolmonen',
+    'Tusby sHooters': 'Kolmonen',
+    'Lungu Lungu': 'Kolmonen',
+    'Pasilan Kalteva': 'Kolmonen'
+  }
+};
+
+function getDivisionForMonth(user, monthKey) {
+  const history = DIVISION_HISTORY[monthKey];
+  if (history) {
+    const name = user.espnTeamName || user.name;
+    if (history[name]) return history[name];
+    for (const [k, v] of Object.entries(history)) {
+      if (name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase())) return v;
+    }
+  }
+  return user.division || 'Kolmonen';
+}
+
+
+
+function getDivisionForMonth(user, monthKey) {
+  const history = DIVISION_HISTORY[monthKey];
+  if (history) {
+    const name = user.espnTeamName || user.name;
+    if (history[name]) return history[name];
+    for (const [k, v] of Object.entries(history)) {
+      if (name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase())) return v;
+    }
+  }
+  return user.division || 'Kolmonen';
+}
+// ===== DIVISIONS PAGE =====
+// ===== DIVISIONS — KUKKULAN KUNINGAS =====
+
+// Division config based on the image:
+// Ykkonen: 7 teams, top division
+// Kakkonen: 6 teams, middle
+// Kolmonen: 5 teams, bottom (flexible, rest)
+const DIVISION_CONFIG = {
+  'Ykkonen':  { label: 'Juti Ykkonen',  size: 7, promoteN: 0, relegateN: 2, cls: 'kk-div-ykkonen',  prize: { 1: '30 €' } },
+  'Kakkonen': { label: 'Juti Kakkonen', size: 6, promoteN: 1, relegateN: 2, cls: 'kk-div-kakkonen', prize: { 1: '10 €' } },
+  'Kolmonen': { label: 'Juti Kolmonen', size: 99, promoteN: 1, relegateN: 0, cls: 'kk-div-kolmonen', prize: { 1: '10 €' } }
+};
+const DIVISION_ORDER = ['Ykkonen', 'Kakkonen', 'Kolmonen'];
+
+function renderDivisions() {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const monthsFI = ['TAMMIKUU','HELMIKUU','MAALISKUU','HUHTIKUU','TOUKOKUU','KESÄKUU','HEINÄKUU','ELOKUU','SYYSKUU','LOKAKUU','MARRASKUU','JOULUKUU'];
+  const monthKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  document.getElementById('div-month').textContent = monthsFI[d.getMonth()] + ' ' + d.getFullYear();
+  state.users.forEach(u => u.divisionThisMonth = getDivisionForMonth(u, monthKey));
+  const allUsers = state.users.map(u => ({...u, pts: calcMonthPoints(u, monthOffset)})).sort((a,b) => b.pts - a.pts);
+  const globalMax = allUsers.length ? allUsers[0].pts : 0;
+  allUsers.forEach((u,i) => { u.kkRank = i+1; });
+  document.getElementById('month-leader-pts').textContent = globalMax.toLocaleString('fi-FI');
+  document.getElementById('month-teams').textContent = allUsers.length;
+  const avg = allUsers.length ? Math.round(allUsers.reduce((s,u) => s+u.pts,0)/allUsers.length) : 0;
+  document.getElementById('month-avg').textContent = avg.toLocaleString('fi-FI');
+  const container = document.getElementById('divisions-container');
+  if (state.users.length === 0) { container.innerHTML = '<div class="empty-state"><p>Ei joukkueita</p></div>'; return; }
+  container.innerHTML = DIVISION_ORDER.map(divKey => {
+    const cfg = DIVISION_CONFIG[divKey];
+    const divUsers = allUsers.filter(u => u.divisionThisMonth === divKey).sort((a,b) => b.pts - a.pts);
+    if (!divUsers.length) return '';
+    const divMax = divUsers[0].pts;
+    const relegateStart = divUsers.length - cfg.relegateN;
+    return '<div class="kk-section"><div class="kk-division-header ' + cfg.cls + '">' + cfg.label + '</div>' +
+      '<div class="card" style="padding:0;overflow:hidden"><table class="kk-table">' +
+      '<thead><tr><th>#</th><th>Joukkue</th><th style="text-align:right">Pisteet</th><th style="text-align:right">KK#</th><th style="text-align:right">Plussaa</th><th style="text-align:right">€€€</th><th style="text-align:right">Jatko</th></tr></thead><tbody>' +
+      divUsers.map((u,i) => {
+        const rank = i+1;
+        const plus = u.pts - divMax;
+        const prize = cfg.prize[rank] || '';
+        let jatko = '>', jatkoCls = 'stay';
+        if (divKey==='Ykkonen' && rank > divUsers.length - cfg.relegateN) { jatko='↓ Kakkonen'; jatkoCls='down'; }
+        else if (divKey==='Kakkonen' && rank <= cfg.promoteN) { jatko='↑ Ykkonen'; jatkoCls='up'; }
+        else if (divKey==='Kakkonen' && rank > divUsers.length - cfg.relegateN) { jatko='↓ Kolmonen'; jatkoCls='down'; }
+        else if (divKey==='Kolmonen' && rank <= cfg.promoteN) { jatko='↑ Kakkonen'; jatkoCls='up'; }
+        const rowCls = (divKey!=='Ykkonen' && rank<=cfg.promoteN) ? 'promote' : (cfg.relegateN>0 && rank>relegateStart) ? 'relegate' : '';
+        return '<tr class="' + rowCls + '"><td><span class="kk-rank' + (rank<=3?' r'+rank:'') + '">' + rank + '</span></td>' +
+          '<td><div style="font-weight:600">' + (u.espnTeamName||u.name) + '</div><div style="font-size:11px;color:var(--muted)">' + u.name + '</div></td>' +
+          '<td class="kk-pts">' + u.pts.toLocaleString('fi-FI') + '</td>' +
+          '<td class="kk-kknum">' + u.kkRank + '</td>' +
+          '<td class="kk-plus ' + (plus===0?'zero':'neg') + '">' + (plus===0?'0':plus.toLocaleString('fi-FI')) + '</td>' +
+          '<td class="kk-prize">' + prize + '</td>' +
+          '<td class="kk-jatko ' + jatkoCls + '">' + jatko + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }).join('');
+}
+
+function changeMonth(dir) {
+  monthOffset += dir;
+  renderDivisions();
+}
+
+// ===== PLAYER TABLE =====
+function renderPlayerTable() {
+  const tbody = document.getElementById('player-tbody');
+  if (state.players.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Ei pelaajia. Lisää pelaajia Hallinta-välilehdeltä.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.players.map(p => {
+    const isPlaying = state.games.some(g =>
+      (g.status === 'STATUS_IN_PROGRESS') &&
+      (g.homeAbbr === p.team || g.awayAbbr === p.team)
+    );
+    const owner = state.users.find(u => u.id === p.userId);
+    return `<tr>
+      <td>
+        <div style="font-weight:600">${p.name}</div>
+        ${owner ? `<div style="font-size:11px;color:var(--muted)">${owner.name}</div>` : ''}
+      </td>
+      <td><span class="player-pos pos-${p.pos}">${p.pos}</span></td>
+      <td><span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${p.team}</span></td>
+      <td>
+        ${isPlaying
+          ? `<div class="playing-now"><div class="playing-dot"></div>Pelaa nyt</div>`
+          : `<span style="color:var(--muted);font-size:12px">Ei pelissä</span>`}
+      </td>
+      <td class="pts-cell">${p.goals||0}</td>
+      <td class="pts-cell">${p.assists||0}</td>
+      <td class="pts-cell">${(p.goals||0)+(p.assists||0)}</td>
+      <td class="pts-cell">${p.monthPts||0}</td>
+      <td><button class="btn-danger" onclick="removePlayer('${p.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== ADMIN =====
+function renderAdminUsers() {
+  const el = document.getElementById('user-management-list');
+  if (state.users.length === 0) {
+    el.innerHTML = '<div class="empty-state" style="padding:24px"><p>Ei pelaajia</p><small>Lisää pelaajia vasemmalta</small></div>';
+    return;
+  }
+  el.innerHTML = state.users.map(u => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.espnTeamName ? `${u.espnTeamName}` : u.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${u.name} · ESPN: ${u.espnId||'—'}</div>
+      </div>
+      <select class="form-select" style="width:110px;padding:4px 8px;font-size:12px" onchange="changeUserDivision('${u.id}', this.value)">
+        <option value="Ykkonen" ${u.division==='Ykkonen'?'selected':''}>Ykkonen</option>
+        <option value="Kakkonen" ${u.division==='Kakkonen'?'selected':''}>Kakkonen</option>
+        <option value="Kolmonen" ${(u.division||'Kolmonen')==='Kolmonen'?'selected':''}>Kolmonen</option>
+      </select>
+      <button class="btn-danger" style="padding:5px 10px;font-size:12px" onclick="removeUser('${u.id}')">✕</button>
+    </div>`).join('');
+}
+
+function changeUserDivision(userId, division) {
+  const user = state.users.find(u => u.id === userId);
+  if (user) { user.division = division; saveState(); }
+}
+
+function addUser() {
+  const name = document.getElementById('new-user-name').value.trim();
+  const espnId = document.getElementById('new-user-espnid').value.trim();
+  const division = document.getElementById('new-user-division').value;
+  const pts = parseInt(document.getElementById('new-user-pts').value) || 0;
+  if (!name) { alert('Anna pelaajan nimi'); return; }
+  const user = { id: Date.now().toString(), name, espnId, division, demoPoints: pts, change: 0 };
+  state.users.push(user);
+  saveState();
+  renderAdminUsers();
+  document.getElementById('new-user-name').value = '';
+  document.getElementById('new-user-espnid').value = '';
+  document.getElementById('stat-users').textContent = state.users.length;
+  renderLeaderboard('dashboard-leaderboard', 0, 'all', 5);
+}
+
+function removeUser(id) {
+  if (!confirm('Poistetaanko pelaaja?')) return;
+  state.users = state.users.filter(u => u.id !== id);
+  saveState();
+  renderAdminUsers();
+}
+
+async function saveEspnSettings() {
+  state.espn = {
+    leagueId: document.getElementById('espn-league-id').value.trim(),
+    season: document.getElementById('espn-season').value.trim(),
+    s2: document.getElementById('espn-s2').value.trim(),
+    swid: document.getElementById('espn-swid').value.trim()
+  };
+  saveState();
+
+  const statusEl = document.getElementById('espn-status');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--text)';
+
+  if (!state.espn.leagueId) {
+    statusEl.innerHTML = '❌ Syötä liiga-ID ensin.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  const leagueId = state.espn.leagueId;
+  const season = state.espn.season || '2024';
+
+  // ESPN changed their base URL in April 2024:
+  // Old: fantasy.espn.com/apis/v3/games/fhl/...
+  // New: lm-api-reads.fantasy.espn.com/apis/v3/games/fhl/...
+  const endpoints = [
+    {
+      label: 'ESPN Fantasy API (uusi 2024+)',
+      url: `https://lm-api-reads.fantasy.espn.com/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}?view=mSettings`
+    },
+    {
+      label: 'ESPN Fantasy API (vanha)',
+      url: `https://fantasy.espn.com/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}?view=mSettings`
+    }
+  ];
+
+  statusEl.innerHTML = `⏳ Testataan yhteyttä ESPN:ään...<br><small style="color:var(--muted)">Liiga-ID: ${leagueId} · Kausi: ${season}</small>`;
+
+  let success = false;
+
+  for (const ep of endpoints) {
+    statusEl.innerHTML += `<br><small style="color:var(--muted)">→ ${ep.label}...</small>`;
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (state.espn.s2) headers['Cookie'] = `espn_s2=${state.espn.s2}; SWID=${state.espn.swid}`;
+
+      const res = await fetch(ep.url, {
+        method: 'GET',
+        credentials: 'include',
+        headers,
+        mode: 'cors'
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        statusEl.innerHTML = `🔒 <strong>Yksityinen liiga</strong> — yhteys muodostettu mutta vaatii kirjautumisen.<br>
+          <small style="color:var(--muted)">HTTP ${res.status} · Lisää espn_s2 ja SWID evästeet alla oleviin kenttiin.<br>
+          Löydät ne: ESPN.com → kirjaudu → DevTools → Application → Cookies</small>`;
+        statusEl.style.color = 'var(--gold)';
+        success = true;
+        break;
+      }
+
+      if (!res.ok) {
+        statusEl.innerHTML += `<br><small style="color:var(--red)">HTTP ${res.status} — kokeillaan seuraavaa...</small>`;
+        continue;
+      }
+
+      const data = await res.json();
+
+      if (data && (data.id || data.settings)) {
+        const leagueName = data.settings?.name || data.name || `Liiga ${leagueId}`;
+        const memberCount = data.members?.length || data.teams?.length || '?';
+        const sport = data.settings?.sport || 'FHL';
+
+        statusEl.innerHTML = `
+          ✅ <strong>Yhteys onnistui!</strong><br>
+          <div style="margin-top:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;font-size:13px">
+            <div style="color:var(--green);font-size:15px;font-weight:600;margin-bottom:6px">${leagueName}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--text)">
+              <span style="color:var(--muted)">Liiga-ID:</span><span>${leagueId}</span>
+              <span style="color:var(--muted)">Kausi:</span><span>${season}</span>
+              <span style="color:var(--muted)">Joukkueet:</span><span>${memberCount}</span>
+              <span style="color:var(--muted)">Laji:</span><span>${sport}</span>
+            </div>
+            ${data.members ? `<div style="margin-top:10px;color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase">Managerit</div>
+            <div style="margin-top:4px">${data.members.slice(0,8).map(m =>
+              `<span style="display:inline-block;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:4px;padding:2px 8px;margin:2px;font-size:12px">${m.displayName || m.firstName+' '+m.lastName}</span>`
+            ).join('')}</div>` : ''}
+          </div>`;
+        statusEl.style.color = 'var(--green)';
+
+        // Auto-import teams/managers if available
+        if (data.members && data.members.length > 0) {
+          autoImportManagers(data.members, data.teams);
+        }
+        success = true;
+        break;
+      } else if (data && data.error) {
+        statusEl.innerHTML = `❌ ESPN vastasi virheellä: <em>${data.error.message || JSON.stringify(data.error)}</em>`;
+        statusEl.style.color = 'var(--red)';
+        success = true;
+        break;
+      }
+    } catch(err) {
+      // CORS block is the most common failure from browser
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        statusEl.innerHTML = `
+          ⚠️ <strong>CORS-esto havaittu</strong> — tämä on normaalia selainympäristössä.<br>
+          <div style="margin-top:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;font-size:13px;color:var(--text)">
+            <strong style="color:var(--gold)">Miksi?</strong> ESPN Fantasy API ei salli suoria selainpyyntöjä toisilta sivustoilta (CORS).<br><br>
+            <strong style="color:var(--gold)">Ratkaisut:</strong><br>
+            1️⃣ <strong>Avaa ESPN suoraan selaimessa</strong> — kirjaudu espn.com/fantasy/hockey, pysyt kirjautuneena<br>
+            2️⃣ <strong>Käytä CORS-proxyä</strong> (kehitys): <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">allorigins.win</code><br>
+            3️⃣ <strong>Node.js backend</strong> (tuotanto) — suositeltavin tapa<br><br>
+            <small style="color:var(--muted)">Asetukset tallennettu ✓ · Liiga-ID: ${leagueId} · Kokeillaan CORS-proxyn kautta...</small>
+          </div>`;
+        statusEl.style.color = 'var(--gold)';
+
+        // Try via allorigins CORS proxy as last resort
+        await tryCorsProxy(leagueId, season, statusEl);
+        success = true;
+        break;
+      }
+    }
+  }
+
+  if (!success) {
+    statusEl.innerHTML = '❌ Yhteys epäonnistui kaikilla tavoilla. Tarkista liiga-ID ja internet-yhteys.';
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+async function tryCorsProxy(leagueId, season, statusEl) {
+  try {
+    const targetUrl = encodeURIComponent(
+      `https://lm-api-reads.fantasy.espn.com/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}?view=mSettings`
+    );
+    const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
+    statusEl.innerHTML += `<br><small style="color:var(--muted)">→ Kokeillaan CORS-proxyn kautta...</small>`;
+    const res = await fetch(proxyUrl);
+    const wrapper = await res.json();
+    const data = JSON.parse(wrapper.contents);
+    if (data && (data.id || data.settings)) {
+      const name = data.settings?.name || `Liiga ${leagueId}`;
+      statusEl.innerHTML += `<br>✅ <strong>Proxy-yhteys onnistui!</strong> Liiga: <strong style="color:var(--cyan)">${name}</strong>`;
+      if (data.members) autoImportManagers(data.members, data.teams);
+    } else if (data?.error) {
+      statusEl.innerHTML += `<br><small style="color:var(--red)">Proxy: ${data.error.message}</small>`;
+    }
+  } catch(e) {
+    statusEl.innerHTML += `<br><small style="color:var(--muted)">Proxy myös estettynä tai liiga on yksityinen.</small>`;
+  }
+}
+
+function autoImportManagers(members, teams) {
+  let imported = 0;
+  members.forEach(m => {
+    const espnId = m.id;
+    const displayName = m.displayName || ((m.firstName||'') + ' ' + (m.lastName||'')).trim();
+    if (!displayName) return;
+    const exists = state.users.find(u => u.espnId === espnId);
+    if (!exists) {
+      const team = teams && teams.find(t => t.primaryOwner === espnId);
+      state.users.push({
+        id: Date.now().toString() + Math.random(),
+        name: displayName,
+        espnId,
+        division: 'A',
+        demoPoints: 0,
+        change: 0,
+        espnTeamName: team?.name || ''
+      });
+      imported++;
+    }
+  });
+  if (imported > 0) {
+    saveState();
+    renderAdminUsers();
+    document.getElementById('stat-users').textContent = state.users.length;
+    renderLeaderboard('dashboard-leaderboard', 0, 'all', 5);
+    const statusEl = document.getElementById('espn-status');
+    statusEl.innerHTML += `<br><br>🎉 <strong>${imported} manageria tuotu automaattisesti!</strong> Näet heidät Pelaajien hallinnassa.`;
+  }
+}
+
+function saveScoringSettings() {
+  state.scoring = {
+    goal: parseFloat(document.getElementById('pts-goal').value),
+    assist: parseFloat(document.getElementById('pts-assist').value),
+    plusminus: parseFloat(document.getElementById('pts-plusminus').value),
+    pim: parseFloat(document.getElementById('pts-pim').value),
+    saves: parseFloat(document.getElementById('pts-saves').value),
+    shutout: parseFloat(document.getElementById('pts-shutout').value)
+  };
+  saveState();
+  alert('Pisteytysasetukset tallennettu ✓');
+}
+
+// ===== PLAYER MODAL =====
+function openAddPlayerModal() {
+  const sel = document.getElementById('modal-player-user');
+  sel.innerHTML = '<option value="">– Ei kenellekään –</option>' +
+    state.users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+  document.getElementById('add-player-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('add-player-modal').classList.remove('open');
+}
+
+function addPlayer() {
+  const name = document.getElementById('modal-player-name').value.trim();
+  const team = document.getElementById('modal-player-team').value;
+  const pos = document.getElementById('modal-player-pos').value;
+  const userId = document.getElementById('modal-player-user').value;
+  if (!name) { alert('Anna pelaajan nimi'); return; }
+  state.players.push({ id: Date.now().toString(), name, team, pos, userId, goals:0, assists:0, monthPts:0 });
+  saveState();
+  closeModal();
+  renderPlayerTable();
+}
+
+function removePlayer(id) {
+  state.players = state.players.filter(p => p.id !== id);
+  saveState();
+  renderPlayerTable();
+}
+
+function saveState() {
+  localStorage.setItem('jkk_users', JSON.stringify(state.users));
+  localStorage.setItem('jkk_players', JSON.stringify(state.players));
+  localStorage.setItem('jkk_scoring', JSON.stringify(state.scoring));
+  localStorage.setItem('jkk_espn', JSON.stringify(state.espn));
+}
+
+// ===== AUTO REFRESH =====
+let refreshInterval;
+function startAutoRefresh() {
+  refreshInterval = setInterval(refreshAll, 60000); // every 60s
+}
+
+// ===== WELCOME MODAL =====
+function welcomeStep2() {
+  const id = document.getElementById('welcome-league-id').value.trim();
+  if (!id) {
+    document.getElementById('welcome-league-id').style.borderColor = 'var(--red)';
+    document.getElementById('welcome-league-id').placeholder = 'Syötä liiga-ID!';
+    return;
+  }
+  state.espn.leagueId = id;
+  state.espn.season = state.espn.season || '2024';
+  saveState();
+  document.getElementById('espn-league-id').value = id;
+  document.getElementById('welcome-step-1').style.display = 'none';
+  document.getElementById('welcome-step-2').style.display = 'block';
+}
+
+function welcomeBack() {
+  document.getElementById('welcome-step-2').style.display = 'none';
+  document.getElementById('welcome-step-1').style.display = 'block';
+}
+
+async function welcomeTestConnection() {
+  const dot = document.getElementById('welcome-dot');
+  const txt = document.getElementById('welcome-status');
+  dot.style.background = 'var(--gold)';
+  dot.style.animation = 'blink 1s infinite';
+  txt.style.color = 'var(--gold)';
+  txt.textContent = '⏳ Testataan yhteyttä ESPN:ään...';
+
+  const leagueId = state.espn.leagueId || '69315';
+  const season = state.espn.season || '2024';
+  const urls = [
+    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}?view=mSettings`,
+    `https://fantasy.espn.com/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}?view=mSettings`
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { credentials: 'include', mode: 'cors' });
+      if (res.status === 401 || res.status === 403) {
+        dot.style.background = 'var(--gold)';
+        dot.style.animation = 'none';
+        txt.style.color = 'var(--gold)';
+        txt.textContent = '🔒 Yksityinen liiga — syötä evästeet Hallinta-välilehdellä';
+        return;
+      }
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data && (data.id || data.settings)) {
+        const name = data.settings?.name || `Liiga ${leagueId}`;
+        dot.style.background = 'var(--green)';
+        dot.style.animation = 'none';
+        txt.style.color = 'var(--green)';
+        txt.textContent = `✅ Yhteys onnistui! — ${name}`;
+        if (data.members) autoImportManagers(data.members, data.teams);
+        return;
+      }
+    } catch(e) {
+      // CORS — try proxy
+    }
+  }
+
+  // Try CORS proxy
+  try {
+    const target = encodeURIComponent(`https://lm-api-reads.fantasy.espn.com/apis/v3/games/fhl/seasons/${season}/segments/0/leagues/${leagueId}?view=mSettings`);
+    const res = await fetch(`https://api.allorigins.win/get?url=${target}`);
+    const wrapper = await res.json();
+    const data = JSON.parse(wrapper.contents);
+    if (data && (data.id || data.settings)) {
+      const name = data.settings?.name || `Liiga ${leagueId}`;
+      dot.style.background = 'var(--green)';
+      dot.style.animation = 'none';
+      txt.style.color = 'var(--green)';
+      txt.textContent = `✅ Yhteys onnistui! — ${name}`;
+      if (data.members) autoImportManagers(data.members, data.teams);
+      return;
+    }
+  } catch(e) {}
+
+  dot.style.background = 'var(--gold)';
+  dot.style.animation = 'none';
+  txt.style.color = 'var(--gold)';
+  txt.textContent = '⚠️ CORS-esto — kirjaudu ESPN:ään samassa selaimessa ja yritä uudelleen, tai syötä evästeet manuaalisesti';
+}
+
+function welcomeSkip() {
+  document.getElementById('welcome-modal').classList.remove('open');
+  localStorage.setItem('jkk_setup_done', '1');
+}
+
+function welcomeFinish() {
+  document.getElementById('welcome-modal').classList.remove('open');
+  localStorage.setItem('jkk_setup_done', '1');
+}
+
+// ===== INIT =====
+async function init() {
+  // Load ESPN settings into form — default to Jutilan Kiekkokoulu
+  document.getElementById('espn-league-id').value = state.espn.leagueId || '69315';
+  document.getElementById('espn-season').value = state.espn.season || '2024';
+  document.getElementById('welcome-league-id').value = state.espn.leagueId || '69315';
+  // Load scoring
+  if (state.scoring) {
+    document.getElementById('pts-goal').value = state.scoring.goal;
+    document.getElementById('pts-assist').value = state.scoring.assist;
+    document.getElementById('pts-plusminus').value = state.scoring.plusminus;
+    document.getElementById('pts-pim').value = state.scoring.pim;
+    document.getElementById('pts-saves').value = state.scoring.saves;
+    document.getElementById('pts-shutout').value = state.scoring.shutout;
+  }
+
+  // Show welcome modal for new users
+  const setupDone = localStorage.getItem('jkk_setup_done');
+  if (!setupDone && !state.espn.leagueId) {
+    document.getElementById('welcome-modal').classList.add('open');
+  }
+
+  await refreshAll();
+  startAutoRefresh();
+}
+
+// Close modal on overlay click
+document.getElementById('add-player-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>

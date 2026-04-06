@@ -1,0 +1,223 @@
+{
+  "paivitetty": "2026-04-07T02:12:39.086974",
+  "liiga": "Jutilan kiakkokoulu",
+  "kausi": 2025,
+  "joukkueet": [
+    {
+      "espnTeamId": "1",
+      "espnTeamName": "Tehtaansuo Akatemia",
+      "managerName": "jiilehtonen",
+      "seasonPts": 2173.0,
+      "monthPts": {
+        "2026-04": 2173.0
+      },
+      "wins": 43,
+      "losses": 285,
+      "standing": 2
+    },
+    {
+      "espnTeamId": "2",
+      "espnTeamName": "Loppi LoKi",
+      "managerName": "ESPNfan5920744536",
+      "seasonPts": 1888.0,
+      "monthPts": {
+        "2026-04": 1888.0
+      },
+      "wins": 45,
+      "losses": 315,
+      "standing": 14
+    },
+    {
+      "espnTeamId": "3",
+      "espnTeamName": "Brooox",
+      "managerName": "Brookkiz",
+      "seasonPts": 1943.0,
+      "monthPts": {
+        "2026-04": 1943.0
+      },
+      "wins": 47,
+      "losses": 273,
+      "standing": 9
+    },
+    {
+      "espnTeamId": "4",
+      "espnTeamName": "Southern Hooligans",
+      "managerName": "Sami_Finn",
+      "seasonPts": 1620.0,
+      "monthPts": {
+        "2026-04": 1620.0
+      },
+      "wins": 47,
+      "losses": 284,
+      "standing": 15
+    },
+    {
+      "espnTeamId": "5",
+      "espnTeamName": "Espoo Chiefs",
+      "managerName": "Vihinen",
+      "seasonPts": 1609.0,
+      "monthPts": {
+        "2026-04": 1609.0
+      },
+      "wins": 30,
+      "losses": 218,
+      "standing": 12
+    },
+    {
+      "espnTeamId": "6",
+      "espnTeamName": "D.R.I",
+      "managerName": "Erde77",
+      "seasonPts": 1885.0,
+      "monthPts": {
+        "2026-04": 1885.0
+      },
+      "wins": 61,
+      "losses": 296,
+      "standing": 10
+    },
+    {
+      "espnTeamId": "7",
+      "espnTeamName": "Veromies Breezers",
+      "managerName": "HugoDonovan1980",
+      "seasonPts": 1687.0,
+      "monthPts": {
+        "2026-04": 1687.0
+      },
+      "wins": 38,
+      "losses": 229,
+      "standing": 17
+    },
+    {
+      "espnTeamId": "8",
+      "espnTeamName": "GM X",
+      "managerName": "geemx",
+      "seasonPts": 2147.0,
+      "monthPts": {
+        "2026-04": 2147.0
+      },
+      "wins": 60,
+      "losses": 281,
+      "standing": 4
+    },
+    {
+      "espnTeamId": "9",
+      "espnTeamName": "Tusby sHooters",
+      "managerName": "Skoodis",
+      "seasonPts": 1989.0,
+      "monthPts": {
+        "2026-04": 1989.0
+      },
+      "wins": 56,
+      "losses": 260,
+      "standing": 5
+    },
+    {
+      "espnTeamId": "14",
+      "espnTeamName": "Team T",
+      "managerName": "jari.t7710268",
+      "seasonPts": 1745.0,
+      "monthPts": {
+        "2026-04": 1745.0
+      },
+      "wins": 58,
+      "losses": 287,
+      "standing": 16
+    },
+    {
+      "espnTeamId": "15",
+      "espnTeamName": "Lungu Lungu",
+      "managerName": "sami.t6660143",
+      "seasonPts": 2086.0,
+      "monthPts": {
+        "2026-04": 2086.0
+      },
+      "wins": 60,
+      "losses": 259,
+      "standing": 3
+    },
+    {
+      "espnTeamId": "19",
+      "espnTeamName": "Seattle Wolverines",
+      "managerName": "kimmo.3989378",
+      "seasonPts": 1436.0,
+      "monthPts": {
+        "2026-04": 1436.0
+      },
+      "wins": 56,
+      "losses": 303,
+      "standing": 18
+    },
+    {
+      "espnTeamId": "20",
+      "espnTeamName": "Jagr 68",
+      "managerName": "Timo8118",
+      "seasonPts": 1798.0,
+      "monthPts": {
+        "2026-04": 1798.0
+      },
+      "wins": 43,
+      "losses": 265,
+      "standing": 11
+    },
+    {
+      "espnTeamId": "23",
+      "espnTeamName": "Pasilan Kalteva",
+      "managerName": "sami.t9281649",
+      "seasonPts": 1857.0,
+      "monthPts": {
+        "2026-04": 1857.0
+      },
+      "wins": 67,
+      "losses": 256,
+      "standing": 7
+    },
+    {
+      "espnTeamId": "24",
+      "espnTeamName": "Las Pargas Islanders",
+      "managerName": "samiva7514306",
+      "seasonPts": 1855.0,
+      "monthPts": {
+        "2026-04": 1855.0
+      },
+      "wins": 40,
+      "losses": 221,
+      "standing": 6
+    },
+    {
+      "espnTeamId": "26",
+      "espnTeamName": "Hellsinki Little Bulldogs",
+      "managerName": "ESPNfan1329219110",
+      "seasonPts": 2095.0,
+      "monthPts": {
+        "2026-04": 2095.0
+      },
+      "wins": 50,
+      "losses": 270,
+      "standing": 1
+    },
+    {
+      "espnTeamId": "27",
+      "espnTeamName": "Kulomäen Ketterä",
+      "managerName": "espn84606936",
+      "seasonPts": 1717.0,
+      "monthPts": {
+        "2026-04": 1717.0
+      },
+      "wins": 74,
+      "losses": 246,
+      "standing": 13
+    },
+    {
+      "espnTeamId": "28",
+      "espnTeamName": "Don Pollos Hermanos",
+      "managerName": "ESPNfan0057170479",
+      "seasonPts": 1962.0,
+      "monthPts": {
+        "2026-04": 1962.0
+      },
+      "wins": 55,
+      "losses": 304,
+      "standing": 8
+    }
+  ]
+}
