@@ -1436,38 +1436,22 @@ function changeMonth(dir) {
 async function renderKausi() {
   const container = document.getElementById('kausi-container');
   try {
-    const res = await fetch('kausi_pisteet.json');
+    const res = await fetch('pisteet.json');
     if (!res.ok) throw new Error('ei löydy');
     const data = await res.json();
 
-    const kuukaudet = data.kuukaudet || [];
-    const joukkueet = data.joukkueet || {};
+    const joukkueet = (data.joukkueet || []).sort((a, b) => b.seasonPts - a.seasonPts);
 
-    document.getElementById('kausi-kuukausia').textContent = kuukaudet.length;
-    document.getElementById('kausi-joukkueita').textContent = Object.keys(joukkueet).length;
-
-    // Yhdistä joukkuenimet state.users-datasta
-    const rows = Object.entries(joukkueet).map(([espnId, d]) => {
-      const user = state.users.find(u => u.espnTeamId === espnId);
-      const nimi = user ? (user.espnTeamName || user.name) : espnId;
-      const manager = user ? user.name : '';
-      return { nimi, manager, yht: d.kausi_yht, kuukaudet: d.kuukaudet };
-    }).sort((a, b) => b.yht - a.yht);
-
-    if (rows.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>Ei kausidataa vielä</p><small>Aja skripti kerran niin data kertyy</small></div>';
+    if (joukkueet.length === 0) {
+      container.innerHTML = '<div class="empty-state"><p>Ei dataa vielä</p></div>';
       return;
     }
 
-    document.getElementById('kausi-karkki-pts').textContent = rows[0].yht.toLocaleString('fi-FI');
-    document.getElementById('kausi-karkki-nimi').textContent = rows[0].nimi;
-    document.getElementById('kausi-paivitetty').textContent = kuukaudet.length ? 'Kuukaudet: ' + kuukaudet.join(', ') : '';
-
-    const kuuHeaders = kuukaudet.map(k => {
-      const [y, m] = k.split('-');
-      const nimet = ['','Tam','Hel','Maa','Huh','Tou','Kes','Hei','Elo','Syy','Lok','Mar','Jou'];
-      return `<th style="text-align:right">${nimet[parseInt(m)]}</th>`;
-    }).join('');
+    document.getElementById('kausi-karkki-pts').textContent = joukkueet[0].seasonPts.toLocaleString('fi-FI');
+    document.getElementById('kausi-karkki-nimi').textContent = joukkueet[0].espnTeamName;
+    document.getElementById('kausi-joukkueita').textContent = joukkueet.length;
+    document.getElementById('kausi-kuukausia').textContent = '—';
+    document.getElementById('kausi-paivitetty').textContent = 'Päivitetty: ' + new Date(data.paivitetty).toLocaleDateString('fi-FI');
 
     container.innerHTML = `
       <div class="card" style="padding:0;overflow:hidden">
@@ -1475,31 +1459,24 @@ async function renderKausi() {
           <thead><tr>
             <th>#</th>
             <th>Joukkue</th>
-            ${kuuHeaders}
+            <th>Manager</th>
             <th style="text-align:right;color:var(--cyan)">Kausi yht.</th>
           </tr></thead>
           <tbody>
-            ${rows.map((r, i) => {
+            ${joukkueet.map((j, i) => {
               const rank = i + 1;
-              const kuuSolut = kuukaudet.map(k => {
-                const pts = r.kuukaudet[k];
-                return `<td style="text-align:right;color:var(--muted)">${pts != null ? pts.toLocaleString('fi-FI') : '—'}</td>`;
-              }).join('');
               return `<tr>
                 <td><span class="kk-rank${rank<=3?' r'+rank:''}">${rank}</span></td>
-                <td>
-                  <div style="font-weight:600">${r.nimi}</div>
-                  <div style="font-size:11px;color:var(--muted)">${r.manager}</div>
-                </td>
-                ${kuuSolut}
-                <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--cyan)">${r.yht.toLocaleString('fi-FI')}</td>
+                <td><div style="font-weight:600">${j.espnTeamName}</div></td>
+                <td><div style="font-size:12px;color:var(--muted)">${j.managerName}</div></td>
+                <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--cyan)">${j.seasonPts.toLocaleString('fi-FI')}</td>
               </tr>`;
             }).join('')}
           </tbody>
         </table>
       </div>`;
   } catch(e) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div><p>kausi_pisteet.json ei löydy</p><small>Aja kiekkokoulu_haku.py kerran niin tiedosto luodaan automaattisesti</small></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div><p>pisteet.json ei löydy</p><small>Aja kiekkokoulu_haku.py kerran niin tiedosto luodaan automaattisesti</small></div>';
   }
 }
 // ===== ADMIN =====
