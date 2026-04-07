@@ -92,5 +92,5 @@ import subprocess
 
 subprocess.run(["git", "-C", r"C:\Users\eerot\Kiekkokoulu", "add", "."], check=True)
 subprocess.run(["git", "-C", r"C:\Users\eerot\Kiekkokoulu", "commit", "-m", f"Pisteet paivitetty {now.strftime('%d.%m.%Y')}"], check=True)
-subprocess.run(["git", "-C", r"C:\Users\eerot\Kiekkokoulu", "push"], check=True)
+subprocess.run(["git", "-C", r"C:\Users\eerot\Kiekkokoulu", "push", "origin", "master:main", "--force"], check=True)
 print("GitHub paivitetty!")
