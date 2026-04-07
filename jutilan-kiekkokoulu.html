@@ -443,7 +443,6 @@
 
   <div class="tabs">
     <button class="tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
-    <button class="tab" onclick="showPage('live')">🔴 Live Pelit</button>
     <button class="tab" onclick="showPage('divisions')">🏆 Divisioona</button>
     <button class="tab" onclick="showPage('kausi')">📅 Kausi</button>
     <button class="tab" onclick="showPage('admin')">⚙️ Hallinta</button>
@@ -516,16 +515,7 @@
     </div>
   </div>
 
-  <!-- LIVE GAMES -->
-  <div class="page" id="page-live">
-    <div class="section-header">
-      <span class="section-title">🔴 Kaikki NHL Pelit Tänään</span>
-      <span class="section-sub" id="live-page-date">—</span>
-    </div>
-    <div id="live-games-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
-      <div style="color:var(--muted);padding:24px">Ladataan...</div>
-    </div>
-  </div>
+
 
   <!-- DIVISIONS -->
   <div class="page" id="page-divisions">
@@ -561,6 +551,27 @@
     </div>
   </div>
 
+  <!-- PLAYERS -->
+  <div class="page" id="page-players">
+    <div class="section-header">
+      <span class="section-title">Kaikki Seuratut Pelaajat</span>
+      <button class="btn-primary" style="font-size:13px;padding:9px 18px" onclick="openAddPlayerModal()">+ Lisää Pelaaja</button>
+    </div>
+    <div class="card">
+      <table class="player-table">
+        <thead>
+          <tr>
+            <th>Pelaaja</th><th>Pos</th><th>Joukkue</th><th>Status</th>
+            <th>G</th><th>A</th><th>PTS</th><th>Kk PTS</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="player-tbody">
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Ei pelaajia. Lisää pelaajia Hallinta-välilehdeltä.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- KAUSI -->
   <div class="page" id="page-kausi">
     <div class="section-header">
@@ -573,19 +584,18 @@
         <div class="stat-label" id="kausi-karkki-nimi">Ladataan...</div>
       </div>
       <div class="card stat-card">
-        <div class="stat-value cyan" id="kausi-kuukausia">—</div>
-        <div class="stat-label">Kuukautta laskettu</div>
+        <div class="stat-value cyan" id="kausi-joukkueita">—</div>
+        <div class="stat-label">Joukkuetta</div>
       </div>
       <div class="card stat-card">
-        <div class="stat-value green" id="kausi-joukkueita">—</div>
-        <div class="stat-label">Joukkuetta</div>
+        <div class="stat-value green" id="kausi-pvm">—</div>
+        <div class="stat-label">Päivitetty</div>
       </div>
     </div>
     <div id="kausi-container">
       <div class="empty-state">
         <div class="empty-state-icon">📅</div>
         <p>Ladataan kausitietoja...</p>
-        <small>kausi_pisteet.json haetaan automaattisesti</small>
       </div>
     </div>
   </div>
@@ -758,7 +768,49 @@
   </div>
 </div>
 
-<!-- modal poistettu -->
+<!-- Add Player Modal -->
+<div class="modal-overlay" id="add-player-modal">
+  <div class="modal">
+    <div class="modal-title">Lisää NHL Pelaaja Seurantaan</div>
+    <div class="form-group">
+      <label class="form-label">Pelaajan Nimi</label>
+      <input class="form-input" id="modal-player-name" placeholder="esim. Connor McDavid">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Joukkue</label>
+      <select class="form-select" id="modal-player-team">
+        <option>EDM</option><option>TOR</option><option>BOS</option><option>NYR</option>
+        <option>FLA</option><option>CAR</option><option>DAL</option><option>COL</option>
+        <option>VGK</option><option>WPG</option><option>TB</option><option>NJ</option>
+        <option>MIN</option><option>OTT</option><option>SEA</option><option>VAN</option>
+        <option>CGY</option><option>LA</option><option>STL</option><option>ANA</option>
+        <option>SJ</option><option>BUF</option><option>PHI</option><option>DET</option>
+        <option>MTL</option><option>PIT</option><option>WSH</option><option>CHI</option>
+        <option>CBJ</option><option>NYI</option><option>NSH</option><option>UTA</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Positio</label>
+      <select class="form-select" id="modal-player-pos">
+        <option value="C">C – Sentteri</option>
+        <option value="LW">LW – Vasen Laitahyökkääjä</option>
+        <option value="RW">RW – Oikea Laitahyökkääjä</option>
+        <option value="D">D – Puolustaja</option>
+        <option value="G">G – Maalivahti</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Liittää pelaajalle (käyttäjä)</label>
+      <select class="form-select" id="modal-player-user">
+        <option value="">– Ei kenellekään –</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Peruuta</button>
+      <button class="btn-primary" style="flex:2" onclick="addPlayer()">Lisää Pelaaja</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ===== STATE =====
@@ -897,6 +949,25 @@ async function fetchPisteetJson() {
       user.seasonPts = j.seasonPts;
       if (!user.monthlyPoints) user.monthlyPoints = {};
       Object.assign(user.monthlyPoints, j.monthPts || {});
+
+      // Update players
+      if (j.pelaajat) {
+        j.pelaajat.forEach(p => {
+          const existing = state.players.findIndex(ep => ep.nimi === p.nimi && ep.userId === user.id);
+          const playerObj = {
+            id: user.id + '_' + p.nimi.replace(/\s/g,''),
+            name: p.nimi,
+            pos: p.positio || 'F',
+            team: p.joukkue || '?',
+            userId: user.id,
+            goals: 0,
+            assists: 0,
+            monthPts: p.pisteet || 0
+          };
+          if (existing >= 0) state.players[existing] = playerObj;
+          else state.players.push(playerObj);
+        });
+      }
     });
 
     saveState();
@@ -1225,7 +1296,7 @@ async function manualSyncESPN() {
     renderLivePage();
     const activePage = document.querySelector('.page.active');
     if (activePage?.id === 'page-divisions') renderDivisions();
-    if (activePage?.id === 'page-kausi') renderKausi();
+    if (activePage?.id === 'page-players') renderPlayerTable();
     if (activePage?.id === 'page-admin') renderAdminUsers();
     document.getElementById('last-updated').textContent = 'Päivitetty: ' + new Date().toLocaleTimeString('fi-FI');
   } catch(e) {
@@ -1432,53 +1503,72 @@ function changeMonth(dir) {
   renderDivisions();
 }
 
+// ===== PLAYER TABLE =====
+function renderPlayerTable() {
+  const tbody = document.getElementById('player-tbody');
+  if (state.players.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Ei pelaajia. Lisää pelaajia Hallinta-välilehdeltä.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.players.map(p => {
+    const isPlaying = state.games.some(g =>
+      (g.status === 'STATUS_IN_PROGRESS') &&
+      (g.homeAbbr === p.team || g.awayAbbr === p.team)
+    );
+    const owner = state.users.find(u => u.id === p.userId);
+    return `<tr>
+      <td>
+        <div style="font-weight:600">${p.name}</div>
+        ${owner ? `<div style="font-size:11px;color:var(--muted)">${owner.name}</div>` : ''}
+      </td>
+      <td><span class="player-pos pos-${p.pos}">${p.pos}</span></td>
+      <td><span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${p.team}</span></td>
+      <td>
+        ${isPlaying
+          ? `<div class="playing-now"><div class="playing-dot"></div>Pelaa nyt</div>`
+          : `<span style="color:var(--muted);font-size:12px">Ei pelissä</span>`}
+      </td>
+      <td class="pts-cell">${p.goals||0}</td>
+      <td class="pts-cell">${p.assists||0}</td>
+      <td class="pts-cell">${(p.goals||0)+(p.assists||0)}</td>
+      <td class="pts-cell">${p.monthPts||0}</td>
+      <td><button class="btn-danger" onclick="removePlayer('${p.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
 // ===== KAUSI =====
 async function renderKausi() {
   const container = document.getElementById('kausi-container');
   try {
     const res = await fetch('pisteet.json');
-    if (!res.ok) throw new Error('ei löydy');
+    if (!res.ok) throw new Error('ei loydy');
     const data = await res.json();
-
     const joukkueet = (data.joukkueet || []).sort((a, b) => b.seasonPts - a.seasonPts);
-
     if (joukkueet.length === 0) {
       container.innerHTML = '<div class="empty-state"><p>Ei dataa vielä</p></div>';
       return;
     }
-
     document.getElementById('kausi-karkki-pts').textContent = joukkueet[0].seasonPts.toLocaleString('fi-FI');
     document.getElementById('kausi-karkki-nimi').textContent = joukkueet[0].espnTeamName;
     document.getElementById('kausi-joukkueita').textContent = joukkueet.length;
-    document.getElementById('kausi-kuukausia').textContent = '—';
-    document.getElementById('kausi-paivitetty').textContent = 'Päivitetty: ' + new Date(data.paivitetty).toLocaleDateString('fi-FI');
-
-    container.innerHTML = `
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="kk-table">
-          <thead><tr>
-            <th>#</th>
-            <th>Joukkue</th>
-            <th>Manager</th>
-            <th style="text-align:right;color:var(--cyan)">Kausi yht.</th>
-          </tr></thead>
-          <tbody>
-            ${joukkueet.map((j, i) => {
-              const rank = i + 1;
-              return `<tr>
-                <td><span class="kk-rank${rank<=3?' r'+rank:''}">${rank}</span></td>
-                <td><div style="font-weight:600">${j.espnTeamName}</div></td>
-                <td><div style="font-size:12px;color:var(--muted)">${j.managerName}</div></td>
-                <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--cyan)">${j.seasonPts.toLocaleString('fi-FI')}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>`;
+    const pvm = new Date(data.paivitetty).toLocaleDateString('fi-FI');
+    document.getElementById('kausi-paivitetty').textContent = 'Päivitetty: ' + pvm;
+    document.getElementById('kausi-pvm').textContent = pvm;
+    container.innerHTML = '<div class="card" style="padding:0;overflow:hidden"><table class="kk-table"><thead><tr><th>#</th><th>Joukkue</th><th>Manager</th><th style=\"text-align:right;color:var(--cyan)\">Kausi yht.</th></tr></thead><tbody>' +
+      joukkueet.map((j, i) => {
+        const rank = i + 1;
+        const rc = rank <= 3 ? ' r' + rank : '';
+        return '<tr><td><span class="kk-rank' + rc + '">' + rank + '</span></td>' +
+          '<td><div style="font-weight:600">' + j.espnTeamName + '</div></td>' +
+          '<td><div style="font-size:12px;color:var(--muted)">' + j.managerName + '</div></td>' +
+          '<td style="text-align:right;font-family:\'JetBrains Mono\',monospace;font-weight:600;color:var(--cyan)">' + j.seasonPts.toLocaleString('fi-FI') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
   } catch(e) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div><p>pisteet.json ei löydy</p><small>Aja kiekkokoulu_haku.py kerran niin tiedosto luodaan automaattisesti</small></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div><p>pisteet.json ei löydy</p></div>';
   }
 }
+
 // ===== ADMIN =====
 function renderAdminUsers() {
   const el = document.getElementById('user-management-list');
@@ -1727,7 +1817,35 @@ function saveScoringSettings() {
   alert('Pisteytysasetukset tallennettu ✓');
 }
 
+// ===== PLAYER MODAL =====
+function openAddPlayerModal() {
+  const sel = document.getElementById('modal-player-user');
+  sel.innerHTML = '<option value="">– Ei kenellekään –</option>' +
+    state.users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+  document.getElementById('add-player-modal').classList.add('open');
+}
 
+function closeModal() {
+  document.getElementById('add-player-modal').classList.remove('open');
+}
+
+function addPlayer() {
+  const name = document.getElementById('modal-player-name').value.trim();
+  const team = document.getElementById('modal-player-team').value;
+  const pos = document.getElementById('modal-player-pos').value;
+  const userId = document.getElementById('modal-player-user').value;
+  if (!name) { alert('Anna pelaajan nimi'); return; }
+  state.players.push({ id: Date.now().toString(), name, team, pos, userId, goals:0, assists:0, monthPts:0 });
+  saveState();
+  closeModal();
+  renderPlayerTable();
+}
+
+function removePlayer(id) {
+  state.players = state.players.filter(p => p.id !== id);
+  saveState();
+  renderPlayerTable();
+}
 
 function saveState() {
   localStorage.setItem('jkk_users', JSON.stringify(state.users));
@@ -1863,7 +1981,10 @@ async function init() {
   startAutoRefresh();
 }
 
-
+// Close modal on overlay click
+document.getElementById('add-player-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
 
 init();
 </script>
